@@ -45,16 +45,16 @@ describe Erlen::Schema::AnyOf do
 
   describe '#method_missing' do
     it 'delegates missing methods to the underlying payload' do
-      payload1 = any_of_1.import(foo: 'do', custom: 'other')
-      payload2 = any_of_1.import(bar: 2, buzz: 'blaze', foo: 9)
+      payload1 = any_of_1.new(foo: 'do', custom: 'other')
+      payload2 = any_of_1.new(bar: 2, buzz: 'blaze')
 
       expect(payload1.foo).to eq('do')
       expect(payload2.buzz).to eq('blaze')
     end
 
     it 'responds to the appropriate attributes' do
-      payload1 = any_of_1.import(foo: 'do', custom: 'other')
-      payload2 = any_of_1.import(bar: 2, buzz: 'blaze', foo: 9)
+      payload1 = any_of_1.new(foo: 'do', custom: 'other')
+      payload2 = any_of_1.new(bar: 2, buzz: 'blaze')
 
       expect(payload1.respond_to?(:foo)).to be_truthy
       expect(payload1.respond_to?(:buzz)).to be_falsey
@@ -66,11 +66,11 @@ describe Erlen::Schema::AnyOf do
 end
 
 class TestAnyASchema < Erlen::Schema::Base
-  attribute :foo, String, required: true
+  attribute :foo, String
   attribute :custom, String
 end
 
 class TestAnyBSchema < Erlen::Schema::Base
-  attribute :bar, Integer, required: true
+  attribute :bar, Integer
   attribute :buzz, String
 end
