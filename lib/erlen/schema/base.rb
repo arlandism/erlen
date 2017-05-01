@@ -159,6 +159,15 @@ module Erlen; module Schema
       end
     end
 
+    def respond_to_missing?(mname, include_all = false)
+      if mname.to_s.end_with?('=')
+        # The lookup is slightly different for assignment
+        __has_assignable_attribute(mname[0..-2].to_sym)
+      else
+        __has_attribute(mname.to_sym)
+      end
+    end
+
     # Composes a hash where the keys are attribute names. Any values that
     # are payloads will be flattened to hashes as well.
     #
@@ -226,9 +235,17 @@ module Erlen; module Schema
       @errors.size == 0
     end
 
+    def __has_assignable_attribute(name)
+      @attributes.include?(name)
+    end
+
+    def __has_attribute(name)
+      !__find_attribute_name(name).nil?
+    end
+
     def __assign_attribute(name, value)
       name = name.to_sym
-      raise(NoAttributeError, name) unless @attributes.include?(name)
+      raise(NoAttributeError, name) unless __has_assignable_attribute(name)
 
       # If the attribute type is a schema and value is not yet a schema, then
       # store value as a schema for easy valid check and to hash
@@ -238,20 +255,24 @@ module Erlen; module Schema
       @attributes[name] = value
     end
 
-    def __find_attribute_value_by_name(name)
+    def __find_attribute_name(name)
       # If the attribute is include retrieve that, otherwise check for aliases
-      if @attributes.include?(name)
-        val = @attributes[name]
+      return name if @attributes.include?(name)
 
-        # We don't want to expose Undefined to the outside world, nil it the logical equal
-        return val.is_a?(Undefined) ? nil : val
-      else
-        self.class.schema_attributes.each_pair do |k, attr|
-          return @attributes[k] if attr.options[:alias] == name
-        end
+      attr_pair = self.class.schema_attributes.detect do |_, attr|
+        attr.options[:alias] == name
       end
 
-      raise NoAttributeError, name
+      attr_pair && attr_pair.first
+    end
+
+    def __find_attribute_value_by_name(name)
+      attrib_name = __find_attribute_name(name)
+      raise(NoAttributeError, name) unless attrib_name
+
+      val = @attributes[attrib_name]
+      # We don't want to expose Undefined to the outside world, nil it the logical equal
+      val.is_a?(Undefined) ? nil : val
     end
 
   end
