@@ -52,13 +52,11 @@ describe Erlen::Rails::ControllerHelper do
     let(:controller) { JobsController.new }
     it "validates create schemas" do
       request = OpenStruct.new
-      body = OpenStruct.new
-      request.body = body
       request.query_parameters = {}
-      body.read = {
+      request.request_parameters = {
         name: "foo",
         organization_id: 123
-      }.to_json
+      }
       controller.request = request
       # manually trigger before action
       controller.validate_request_schema_for_create
@@ -71,7 +69,7 @@ describe Erlen::Rails::ControllerHelper do
     end
     it "validates show schema (without a proper payload)" do
       request = OpenStruct.new
-      request.body = ""
+      request.request_parameters = {}
       request.query_parameters = {}
       controller.request = request
       controller.validate_request_schema_for_show
@@ -84,28 +82,16 @@ describe Erlen::Rails::ControllerHelper do
     end
     it 'sets request parameters' do
       request = OpenStruct.new
-      body = OpenStruct.new
-      request.body = body
-      body.read = {
+      request.request_parameters = {
         name: "foo",
         organization_id: 123
-      }.to_json
+      }
       request.query_parameters = { query: 'param', bad: true }
       controller.request = request
       controller.validate_request_schema_for_create
 
       # puts controller.request_payload.inspect
       expect(controller.request_payload.query).to eq('param')
-    end
-    it "invalidates malformed request body" do
-      request = OpenStruct.new
-      body = OpenStruct.new
-      request.body = body
-      body.read = "notavalidjson"
-      controller.request = request
-      expect do
-        controller.validate_request_schema_for_create
-      end.to raise_error(Erlen::InvalidRequestError)
     end
     it "invalidates malformed response body" do
       response = OpenStruct.new
@@ -117,19 +103,15 @@ describe Erlen::Rails::ControllerHelper do
     end
     it "invalidates inappropriate request payload" do
       request = OpenStruct.new
-      body = OpenStruct.new
       request.query_parameters = {}
-      request.body = body
-      body.read = { wrongattribute: 'foo' }.to_json
+      request.request_parameters = { wrongattribute: 'foo' }
       controller.request = request
       expect do
         controller.validate_request_schema_for_create
       end.to raise_error(Erlen::NoAttributeError)
       request = OpenStruct.new
-      body = OpenStruct.new
       request.query_parameters = {}
-      request.body = body
-      body.read = {}.to_json
+      request.request_parameters = {}
       controller.request = request
       expect do
         controller.validate_request_schema_for_create

@@ -62,7 +62,7 @@ module Erlen; module Schema
         end
 
         def to_data
-          @payload.to_data
+          @payload&.to_data
         end
 
         protected

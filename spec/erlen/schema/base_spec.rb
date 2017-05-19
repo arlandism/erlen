@@ -17,6 +17,27 @@ describe Erlen::Schema::Base do
       expect(payload.class.schema_attributes).to include(:foo)
       expect(payload.foo).to eq('bar')
     end
+
+    it 'handles type coercions' do
+      data = {
+        int: '1',
+        flt: '1.1',
+        bool: 'true',
+        bool2: 't',
+        bool3: 'f',
+        bool4: 0,
+        dt: '1/1/2017/',
+      }
+      payload = TestTypeSchema.new(data)
+
+      expect(payload.int).to eq(1)
+      expect(payload.flt).to eq(1.1)
+      expect(payload.bool).to eq(true)
+      expect(payload.bool2).to eq(true)
+      expect(payload.bool3).to eq(false)
+      expect(payload.bool4).to eq(false)
+      expect(payload.dt).to eq(DateTime.parse('1/1/2017'))
+    end
   end
 
   describe "#valid?" do
@@ -143,6 +164,16 @@ class TestBaseSchema < Erlen::Schema::Base
   attribute :custom, Integer
 
   validate("Error Message") { |s| s.foo == 'bar' || s.foo == 1 }
+end
+
+class TestTypeSchema < Erlen::Schema::Base
+  attribute :int, Integer
+  attribute :flt, Float
+  attribute :bool, Boolean
+  attribute :bool2, Boolean
+  attribute :bool3, Boolean
+  attribute :bool4, Boolean
+  attribute :dt, DateTime
 end
 
 class TestObj
