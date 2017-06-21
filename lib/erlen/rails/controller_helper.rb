@@ -3,10 +3,16 @@ module Erlen; module Rails
   # schemas, which creates before/after action callbacks to validate
   # either/both request or/and response payloads.
   module ControllerHelper
+    extend ActiveSupport::Concern
+    include ActionController::ParamsWrapper
+
+    included do
+      wrap_parameters false
+    end
+
     # This module contains class methods that will extend the class that
     # inherits #ControllerHelper
     module ClassMethods
-
       # Specifies a schema for the action. If request schema is specified,
       # it will create a before action callback to deserialize and validate the
       # payload. If response schema is specified, it will create a after
@@ -29,16 +35,14 @@ module Erlen; module Rails
           @request_schema = request_schema
           @response_schema = response_schema
           if request_schema
-            begin
-              @__erlen__request_payload = Erlen::Serializer::JSON.from_json(request.body.read, request_schema)
-              request.query_parameters.each do |k, v|
-                next unless request_schema.schema_attributes.keys.include?(k.to_sym)
+            @__erlen__request_payload = request_schema.new(Hash[request.request_parameters.map { |k, v| [k.to_s.underscore.to_sym, v] }])
 
-                @__erlen__request_payload.send("#{k}=", v)
-              end
+            optional_params = request.query_parameters.merge(request.path_parameters)
+            optional_params = Hash[optional_params.map { |k, v| [k.to_s.underscore.to_sym, v] }]
+            optional_params.each do |k, v|
+              next unless request_schema.schema_attributes.keys.include?(k.to_sym)
 
-            rescue JSON::ParserError
-              raise InvalidRequestError.new("Could not parse request body")
+              @__erlen__request_payload.send("#{k}=", v)
             end
 
             raise ValidationError.from_errors(@__erlen__request_payload.errors) unless @__erlen__request_payload.valid?
