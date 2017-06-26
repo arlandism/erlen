@@ -35,7 +35,7 @@ module Erlen; module Rails
           @request_schema = request_schema
           @response_schema = response_schema
           if request_schema
-            @__erlen__request_payload = request_schema.new(Hash[request.request_parameters.map { |k, v| [k.to_s.underscore.to_sym, v] }])
+            @__erlen__request_payload = request_schema.new(__normalize_data(request.request_parameters))
 
             optional_params = request.query_parameters.merge(request.path_parameters)
             optional_params = Hash[optional_params.map { |k, v| [k.to_s.underscore.to_sym, v] }]
@@ -65,6 +65,14 @@ module Erlen; module Rails
           raise ValidationError.from_errors(@__erlen__response_payload.errors) unless @__erlen__response_payload.valid?
         end
       end
+    end
+
+    def __normalize_data(data)
+      return data unless data.is_a? Hash
+
+      Hash[data.map do |k, v|
+        [k.to_s.underscore.to_sym, __normalize_data(v)]
+      end]
     end
 
     # When this module is included, extend the class to have class methods
