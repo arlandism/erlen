@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    erlen (0.1.5)
+    erlen (0.1.8)
 
 GEM
   remote: https://rubygems.org/
