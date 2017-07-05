@@ -1,3 +1,6 @@
+require 'active_support'
+require 'action_controller'
+
 module Erlen; module Rails
   # This helper module can be included in a controller to define action
   # schemas, which creates before/after action callbacks to validate

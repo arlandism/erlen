@@ -194,6 +194,10 @@ module Erlen; module Schema
       Hash[arr]
     end
 
+    def as_json(*args)
+      to_data.as_json(*args)
+    end
+
     # Performs a deep cloning of the current payload. It's cloning and not
     # importing so undefined values will remain undefined.
     #

@@ -157,6 +157,22 @@ describe Erlen::Schema::Base do
       expect(payload1.eql?(payload2)).to be(false)
     end
   end
+
+  describe '#as_json' do
+    it 'uses the hash of to_data for json conversion' do
+      payload = TestBaseSchema.import(foo: 'bar', custom: 1)
+
+      expect(payload).not_to receive(:warn)
+      expect(payload.as_json).to eq('foo' => 'bar', 'custom' => 1)
+    end
+
+    it 'filters by using activesupport Hash modifications' do
+      payload = TestBaseSchema.import(foo: 'bar', custom: 1)
+
+      expect(payload).not_to receive(:warn)
+      expect(payload.as_json(only: 'foo')).to eq('foo' => 'bar')
+    end
+  end
 end
 
 class TestBaseSchema < Erlen::Schema::Base
