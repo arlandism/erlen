@@ -260,6 +260,8 @@ module Erlen; module Schema
         __parse_bool(value)
       when 'DateTime'
         DateTime.parse(value)
+      when 'Date'
+        Date.parse(value)
       else
         value
       end

@@ -40,7 +40,7 @@ module Erlen; module Rails
           if request_schema
             @__erlen__request_payload = request_schema.new(__normalize_data(request.request_parameters))
 
-            optional_params = request.query_parameters.merge(request.path_parameters)
+            optional_params = (request.query_parameters || {}).merge(request.path_parameters || {})
             optional_params = Hash[optional_params.map { |k, v| [k.to_s.underscore.to_sym, v] }]
             optional_params.each do |k, v|
               next unless request_schema.schema_attributes.keys.include?(k.to_sym)
