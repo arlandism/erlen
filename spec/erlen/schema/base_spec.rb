@@ -27,6 +27,7 @@ describe Erlen::Schema::Base do
         bool3: 'f',
         bool4: 0,
         dt: '1/1/2017/',
+        d: '2018-02-03'
       }
       payload = TestTypeSchema.new(data)
 
@@ -37,6 +38,26 @@ describe Erlen::Schema::Base do
       expect(payload.bool3).to eq(false)
       expect(payload.bool4).to eq(false)
       expect(payload.dt).to eq(DateTime.parse('1/1/2017'))
+      expect(payload.d).to eq(Date.parse('2018-02-03'))
+    end
+
+    it 'returns correct values if they do not need to be coerced' do
+      data = {
+        int: 1,
+        flt: 1.1,
+        bool: true,
+        bool2: false,
+        dt: DateTime.parse('1/1/2017'),
+        d: Date.parse('2018-02-03')
+      }
+      payload = TestTypeSchema.new(data)
+
+      expect(payload.int).to eq(1)
+      expect(payload.flt).to eq(1.1)
+      expect(payload.bool).to eq(true)
+      expect(payload.bool2).to eq(false)
+      expect(payload.dt).to eq(DateTime.parse('1/1/2017'))
+      expect(payload.d).to eq(Date.parse('2018-02-03'))
     end
   end
 
@@ -190,6 +211,7 @@ class TestTypeSchema < Erlen::Schema::Base
   attribute :bool3, Boolean
   attribute :bool4, Boolean
   attribute :dt, DateTime
+  attribute :d, Date
 end
 
 class TestObj
