@@ -61,6 +61,10 @@ module Erlen; module Schema
           @payload.method_missing(mname, value)
         end
 
+        def respond_to_missing?(mname, include_all = false)
+          @payload.respond_to?(mname, include_all)
+        end
+
         def to_data
           @payload&.to_data
         end

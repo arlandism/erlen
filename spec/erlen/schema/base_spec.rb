@@ -82,6 +82,15 @@ describe Erlen::Schema::Base do
       expect(missing.foo).to eq('bar')
       expect(missing.bar).to eq('bar')
     end
+
+    it 'responds to an attribute or alias' do
+      missing = TestBaseSchema.new({ foo: 'NOT' })
+
+      expect(missing.respond_to?(:foo)).to be_truthy
+      expect(missing.respond_to?(:bar)).to be_truthy
+      expect(missing.respond_to?(:foo=)).to be_truthy
+      expect(missing.respond_to?(:bar=)).to be_falsey
+    end
   end
 
   describe "#errors" do
