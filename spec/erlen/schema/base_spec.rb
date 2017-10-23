@@ -17,6 +17,48 @@ describe Erlen::Schema::Base do
       expect(payload.class.schema_attributes).to include(:foo)
       expect(payload.foo).to eq('bar')
     end
+
+    it 'handles type coercions' do
+      data = {
+        int: '1',
+        flt: '1.1',
+        bool: 'true',
+        bool2: 't',
+        bool3: 'f',
+        bool4: 0,
+        dt: '1/1/2017/',
+        d: '2018-02-03'
+      }
+      payload = TestTypeSchema.new(data)
+
+      expect(payload.int).to eq(1)
+      expect(payload.flt).to eq(1.1)
+      expect(payload.bool).to eq(true)
+      expect(payload.bool2).to eq(true)
+      expect(payload.bool3).to eq(false)
+      expect(payload.bool4).to eq(false)
+      expect(payload.dt).to eq(DateTime.parse('1/1/2017'))
+      expect(payload.d).to eq(Date.parse('2018-02-03'))
+    end
+
+    it 'returns correct values if they do not need to be coerced' do
+      data = {
+        int: 1,
+        flt: 1.1,
+        bool: true,
+        bool2: false,
+        dt: DateTime.parse('1/1/2017'),
+        d: Date.parse('2018-02-03')
+      }
+      payload = TestTypeSchema.new(data)
+
+      expect(payload.int).to eq(1)
+      expect(payload.flt).to eq(1.1)
+      expect(payload.bool).to eq(true)
+      expect(payload.bool2).to eq(false)
+      expect(payload.dt).to eq(DateTime.parse('1/1/2017'))
+      expect(payload.d).to eq(Date.parse('2018-02-03'))
+    end
   end
 
   describe "#valid?" do
@@ -145,6 +187,22 @@ describe Erlen::Schema::Base do
       expect(payload1.eql?(payload2)).to be(false)
     end
   end
+
+  describe '#as_json' do
+    it 'uses the hash of to_data for json conversion' do
+      payload = TestBaseSchema.import(foo: 'bar', custom: 1)
+
+      expect(payload).not_to receive(:warn)
+      expect(payload.as_json).to eq('foo' => 'bar', 'custom' => 1)
+    end
+
+    it 'filters by using activesupport Hash modifications' do
+      payload = TestBaseSchema.import(foo: 'bar', custom: 1)
+
+      expect(payload).not_to receive(:warn)
+      expect(payload.as_json(only: 'foo')).to eq('foo' => 'bar')
+    end
+  end
 end
 
 class TestBaseSchema < Erlen::Schema::Base
@@ -152,6 +210,17 @@ class TestBaseSchema < Erlen::Schema::Base
   attribute :custom, Integer
 
   validate("Error Message") { |s| s.foo == 'bar' || s.foo == 1 }
+end
+
+class TestTypeSchema < Erlen::Schema::Base
+  attribute :int, Integer
+  attribute :flt, Float
+  attribute :bool, Boolean
+  attribute :bool2, Boolean
+  attribute :bool3, Boolean
+  attribute :bool4, Boolean
+  attribute :dt, DateTime
+  attribute :d, Date
 end
 
 class TestObj

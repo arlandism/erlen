@@ -111,14 +111,22 @@ module Erlen; module Schema
         @attributes[k] = v.options.include?(:default) ? v.options[:default] : Undefined.new
       end
 
+      bad_attributes = []
       if obj.is_a? Hash
         # Bulk assign initial attributes
         obj.each_pair do |k, v|
+          if !@attributes.include?(k.to_sym)
+            bad_attributes << k
+            next
+          end
+
           __assign_attribute(k, v)
         end
       else
         raise ArgumentError
       end
+
+      raise(NoAttributeError, bad_attributes.join(', ')) if bad_attributes.count > 0
     end
 
     # Checks if a payload is valid or not by validating it against the
@@ -195,6 +203,10 @@ module Erlen; module Schema
       Hash[arr]
     end
 
+    def as_json(*args)
+      to_data.as_json(*args)
+    end
+
     # Performs a deep cloning of the current payload. It's cloning and not
     # importing so undefined values will remain undefined.
     #
@@ -250,9 +262,39 @@ module Erlen; module Schema
       # If the attribute type is a schema and value is not yet a schema, then
       # store value as a schema for easy valid check and to hash
       attr = self.class.schema_attributes[name]
-      value = attr.type.new(value) if attr.type <= Base && !(value.class <= Base)
+      value = attr.type.new(value) if attr.type <= Base && !(value.class <= Base) && !value.nil?
 
-      @attributes[name] = value
+      @attributes[name] = __coerce_type(attr, value)
+    end
+
+    def __coerce_type(attr, value)
+      case attr.type.to_s
+      when 'Integer'
+        Integer(value)
+      when 'Float'
+        Float(value)
+      when 'Boolean'
+        __parse_bool(value)
+      when 'DateTime'
+        DateTime.parse(value)
+      when 'Date'
+        Date.parse(value)
+      else
+        value
+      end
+    rescue
+      value
+    end
+
+    def __parse_bool(value)
+      case value
+      when 'true', 't', 1
+        true
+      when 'false', 'f', 0
+        false
+      else
+        value
+      end
     end
 
     def __find_attribute_name(name)
