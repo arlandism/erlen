@@ -115,6 +115,11 @@ describe Erlen::Schema::Base do
       expect(payload.foo).to eq('bar')
       expect(payload.custom).to eq(nil)
     end
+
+    it 'defaults hash attributes' do
+      payload = TestBaseSchema.import(foo: 'bar', custom: 1)
+      expect(payload.default).to eq(10)
+    end
   end
 
   describe '#to_data' do
@@ -208,6 +213,7 @@ end
 class TestBaseSchema < Erlen::Schema::Base
   attribute :foo, String, { alias: :bar }
   attribute :custom, Integer
+  attribute :default, Integer, default: 10
 
   validate("Error Message") { |s| s.foo == 'bar' || s.foo == 1 }
 end
